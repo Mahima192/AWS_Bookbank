@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Book - Bookstore</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #333;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+        }
+        nav ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        nav ul li {
+            display: inline;
+            margin-right: 20px;
+        }
+        nav ul li a {
+            color: #fff;
+            text-decoration: none;
+        }
+        main {
+            padding: 20px;
+        }
+        form {
+            width: 50%;
+            margin: 0 auto;
+        }
+        label {
+            display: inline-block;
+            width: 30%;
+            margin-right: 5%;
+            margin-bottom: 10px;
+            text-align: right;
+        }
+        input[type="text"],
+        input[type="number"] {
+            width: 60%;
+            padding: 10px;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+        }
+        footer {
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 10px;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Add Book</h1>
+        <nav>
+            <ul>
+                <li><a href="home.html">My Books</a></li>
+                <li><a href="#">Books</a></li>
+                <li><a href="logout.html">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <form id="addBookForm">
+            <label for="title">Title:</label>
+            <input type="text" id="title" name="title" required><br>
+            
+            <label for="authors">Authors:</label>
+            <input type="text" id="authors" name="authors" required><br>
+            
+            <label for="publisher">Publisher:</label>
+            <input type="text" id="publisher" name="publisher" required><br>
+            
+            <label for="year">Year:</label>
+            <input type="number" id="year" name="year" required><br>
+            
+            <label for="image">Image:</label>
+            <input type="text" id="image" name="image" required><br>
+    
+            <input type="submit" value="Add Book">
+        </form>
+    </main>    
+    <footer>
+        <p>&copy; 2024 Bookstore. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // read the local storage for cognito User Token
+        const token = localStorage.getItem("cognitoUserToken");
+        // if token is not present, redirect to login page
+        if (!token) {
+            window.location.href = "/home.html";
+        }
+    
+        const form = document.getElementById("addBookForm");
+        form.addEventListener("submit", (event) => {
+            event.preventDefault();
+            const formData = new FormData(form);
+            const book = {
+                Title: formData.get("title"),
+                Authors: formData.get("authors"),
+                Publisher: formData.get("publisher"),
+                Year: formData.get("year"),
+                Image: formData.get("image")
+            };
+    
+            fetch(
+                "https://a5f5pbssvl.execute-api.us-east-1.amazonaws.com/prod/books",
+                {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(book),
+                }
+            )
+            .then((response) => response.json())
+            .then((data) => {
+                console.log(data);
+                // redirect to home page
+                // window.location.href = "/home.html";
+            })
+            .catch((error) => {
+                console.error("Error:", error);
+            });
+        });
+    </script>
+</body>
+</html>

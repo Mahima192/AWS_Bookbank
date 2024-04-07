@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bookstore - Home</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Welcome to Our Bookstore</h1>
+        <nav>
+            <ul>
+                <li id="homeButton"><a href="home.html">Home</a></li>
+                <li><a href="https://bookbank.auth.us-east-1.amazoncognito.com/logout?client_id=3hacfm00iheaog4c53npk23162&logout_uri=http%3A%2F%2Flocalhost%3A5500%2Flogout.html" onclick="logout()">Logout</a></li>
+                <li><a href="add.html">Add Book</a></li>
+            </ul>
+        </nav>        
+    </header>
+    <main id="books-container">
+        <!-- Book tiles will be dynamically added here -->
+    </main>
+    <footer>
+        <p>&copy; 2024 Bookstore. All rights reserved.</p>
+    </footer>
+    <script>
+        const tokenSegments = window.location.hash.split("#");
+      if (tokenSegments.length === 2) {
+        const idToken = window.location.hash
+          .split("#")[1]
+          .split("&")[0]
+          .split("=")[1];
+
+        console.log(idToken);
+        if (idToken) {
+          // store the id token in the local storage
+          localStorage.setItem("cognitoUserToken", idToken);
+          // remove the hash from the URL
+          window.location.href = window.location.href.split("#")[0];
+          // redirect to home page
+        } else {
+          //redirect to index.html
+          //window.location.href = "http://localhost:5500/index.html";
+        }
+      }
+        function logout() {
+            localStorage.removeItem('cognitoUserToken');
+            window.location.href = 'logout.html'; // Redirect to logout page
+        }
+        const token = localStorage.getItem("cognitoUserToken");
+      console.log(token);
+
+      const BASE_URL =
+      "https://a5f5pbssvl.execute-api.us-east-1.amazonaws.com/prod/books";
+
+      const deleteBook = (bookId) => {
+        fetch(`${BASE_URL}/${bookId}`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log(data);
+            window.location.reload(); // Refresh the page after deletion
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+          });
+      };
+
+      fetch(BASE_URL, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          console.log(data);
+
+          const books = data.body;
+          const container = document.querySelector("#books-container");
+          books.forEach((book) => {
+            const bookElement = document.createElement("div");
+            bookElement.classList.add("book");
+
+            const imgElement = document.createElement("img");
+            imgElement.src = book.Image;
+            imgElement.alt = "Cover Image of " + book.Title;
+            imgElement.classList.add("book-image");
+            bookElement.appendChild(imgElement);
+
+            const bookDetails = document.createElement("div");
+            bookDetails.classList.add("book-details");
+
+            const h2Element = document.createElement("h2");
+            h2Element.textContent = book.Title;
+            bookDetails.appendChild(h2Element);
+
+            const pAuthor = document.createElement("p");
+            pAuthor.textContent = `Author: ${book.Authors}`;
+            bookDetails.appendChild(pAuthor);
+
+            const pPublisher = document.createElement("p"); // Add Publisher
+            pPublisher.textContent = `Publisher: ${book.Publisher}`; // Add Publisher
+            bookDetails.appendChild(pPublisher); // Add Publisher
+
+            const pYear = document.createElement("p");
+            pYear.textContent = `Year: ${book.Year}`;
+            bookDetails.appendChild(pYear);
+
+            bookElement.appendChild(bookDetails);
+
+            const bookActions = document.createElement("div");
+            bookActions.classList.add("book-actions");
+ 
+            const editButton = document.createElement("button");
+            editButton.classList.add("edit-btn");
+            editButton.textContent = "Edit";
+            editButton.onclick = () => {
+    // Construct the query parameters with book details
+                const queryParams = new URLSearchParams({
+                    id: book.Book_Id,
+                    title: book.Title,
+                    authors: book.Authors,
+                    publisher: book.Publisher,
+                    year: book.Year,
+                    imageURL: book.Image
+        // Add more parameters as needed
+                }).toString();
+
+    // Redirect to edit.html with query parameters
+                window.location.href = `edit.html?${queryParams}`;
+            };
+            bookActions.appendChild(editButton);
+
+            const deleteButton = document.createElement("button");
+            deleteButton.classList.add("delete-btn");
+            deleteButton.textContent = "Delete";
+            deleteButton.onclick = () => deleteBook(book.Book_Id); // Corrected book ID
+            bookActions.appendChild(deleteButton);
+
+            bookElement.appendChild(bookActions);
+
+            container.appendChild(bookElement);
+          });
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+        });
+
+        window.onload = function() {
+            const token = localStorage.getItem('cognitoUserToken');
+            if (token) {
+                document.getElementById('logoutButton').style.display = 'block';
+                displayBooks(token);
+            } else {
+                // Redirect to login page if token is not found
+                window.location.href = 'login.html';
+            }
+        };
+    </script>
+</body>
+</html>

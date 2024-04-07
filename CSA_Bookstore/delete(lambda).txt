@@ -1,0 +1,17 @@
+import json
+import boto3
+
+def lambda_handler(event, context):
+    print("Event:", json.dumps(event))  # Log the entire event object
+
+    # Check if pathParameters exist in the event object
+    book_id = event['id']
+        # Proceed with the delete operation
+    dynamodb = boto3.resource('dynamodb')
+    table = dynamodb.Table('Books')
+    table.delete_item(Key={'Book_Id': book_id})
+    
+    return {
+        'statusCode': 200,
+        'body': json.dumps('Book deleted successfully!')
+    }

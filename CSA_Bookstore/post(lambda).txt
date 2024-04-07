@@ -1,0 +1,36 @@
+import boto3
+import json
+import uuid
+
+uuid.uuid4()
+
+# Initialize DynamoDB and the counter table
+dynamodb = boto3.resource('dynamodb')
+
+
+def lambda_handler(event, context):
+    # Extract book data from the event
+    book_data = event
+
+    # Ensure that the book_data contains all necessary attributes
+    if 'Authors' not in book_data or 'Publisher' not in book_data or 'Title' not in book_data or 'Year' not in book_data or 'Image' not in book_data:
+        return {
+            'statusCode': 400,
+            'body': json.dumps('Missing required attributes')
+        }
+
+    # Put the book item into the DynamoDB table
+    table = dynamodb.Table('Books')
+    table.put_item(Item={
+        'Book_Id': str(uuid.uuid4()),
+        'Authors': book_data['Authors'],
+        'Publisher': book_data['Publisher'],
+        'Title': book_data['Title'],
+        'Year': book_data['Year'],
+        'Image': book_data['Image']
+    })
+
+    return {
+        'statusCode': 201,
+        'body': json.dumps('Book added successfully!')
+    }

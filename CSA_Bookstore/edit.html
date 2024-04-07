@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Book - Bookstore</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Edit Book</h1>
+        <nav>
+            <ul>
+                <li><a href="home.html">My</a></li>
+                <li><a href="#">Books</a></li>
+                <li><a href="logout.html">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <form id="editBookForm">
+            <label for="bookName">Title:</label>
+            <input type="text" id="bookName" name="bookName" required><br>
+            
+            <label for="authorName">Authors:</label>
+            <input type="text" id="authorName" name="authorName" required><br>
+            
+            <label for="publisherName">Publisher:</label>
+            <input type="text" id="publisherName" name="publisherName" required><br>
+            
+            <label for="year">Year:</label>
+            <input type="number" id="year" name="year" required><br>
+            
+            <label for="imageURL">Image:</label>
+            <input type="text" id="imageURL" name="imageURL"><br>
+
+            <input type="submit" id="saveChangesBtn" value="Save Changes">
+        </form>
+    </main>
+    <footer>
+        <p>&copy; 2024 Bookstore. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Function to parse query parameters from URL
+        function getQueryParams() {
+            const queryString = window.location.search;
+            const urlParams = new URLSearchParams(queryString);
+            return Object.fromEntries(urlParams.entries());
+        }
+
+        // Function to populate form fields with book details
+        function populateFormFields() {
+            const queryParams = getQueryParams();
+            document.getElementById('bookName').value = queryParams.title || '';
+            document.getElementById('authorName').value = queryParams.authors || '';
+            document.getElementById('publisherName').value = queryParams.publisher || '';
+            document.getElementById('year').value = queryParams.year || '';
+            document.getElementById('imageURL').value = queryParams.imageURL || '';
+        }
+
+        // Call populateFormFields function when the page loads
+        window.onload = populateFormFields;
+        const queryParams = getQueryParams();
+        const Book_Id = queryParams.id;
+        const form = document.getElementById("editBookForm");
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(form);
+            const editedBook = {
+                Book_Id: Book_Id,
+                Title: formData.get("bookName"),
+                Authors: formData.get("authorName"),
+                Publisher: formData.get("publisherName"),
+                Year: formData.get("year"),
+                Image: formData.get("imageURL")
+            };
+
+            // Get the book ID from query parameters
+             // Assuming 'id' is the parameter for book ID
+
+            // Construct the URL with the book ID
+            const url = `https://a5f5pbssvl.execute-api.us-east-1.amazonaws.com/prod/books`;
+
+            // Read the local storage for Cognito User Token
+            const token = localStorage.getItem("cognitoUserToken");
+
+            // If token is not present, redirect to login page
+            if (!token) {
+                window.location.href = "/home.html";
+                return; // Exit the function to prevent further execution
+            }
+
+            fetch(
+                url,
+                {
+                    method: "PUT",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(editedBook),
+                }
+            )
+            .then((response) => {
+                if (response.ok) {
+                    // If the PUT request is successful, redirect to home.html
+                    window.location.href = "/home.html";
+                } else {
+                    // Handle errors if the PUT request fails
+                    console.error("Failed to update book:", response.statusText);
+                    // Display an error message to the user or handle it accordingly
+                }
+            })
+            .catch((error) => {
+                console.error("Error:", error);
+            });
+        });
+    </script>
+</body>
+</html>

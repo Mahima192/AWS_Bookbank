@@ -1,0 +1,33 @@
+import boto3
+import json
+
+def lambda_handler(event, context):
+    dynamodb = boto3.resource('dynamodb')
+    table = dynamodb.Table('Books')
+
+    # Assuming the provided event contains the book data in the specified format
+    book_data = event
+    
+    # Define ExpressionAttributeNames to specify an alternative name for the reserved keyword
+    expression_attribute_names = {
+        "#Y": "Year"  # Using #Y as an alias for the Year attribute
+    }
+    
+    # Update the item with the ExpressionAttributeNames
+    table.update_item(
+        Key={'Book_Id': book_data['Book_Id']},
+        UpdateExpression="SET Title = :title, Authors = :authors, Publisher = :publisher, #Y = :year, Image = :image",
+        ExpressionAttributeValues={
+            ':title': book_data['Title'],
+            ':authors': book_data['Authors'],
+            ':publisher': book_data['Publisher'],
+            ':year': int(book_data['Year']),
+            ':image': book_data['Image']
+        },
+        ExpressionAttributeNames=expression_attribute_names
+    )
+    
+    return {
+        'statusCode': 200,
+        'body': json.dumps('Book updated successfully!')
+    }
